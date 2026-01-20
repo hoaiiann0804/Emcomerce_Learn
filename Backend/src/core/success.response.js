@@ -27,23 +27,24 @@ class SucessResponse {
 
 class OK extends SucessResponse {
   constructor({ message, metadata }) {
-    super({message, metadata});
+    super({ message, metadata });
   }
 }
 
 class CREATED extends SucessResponse {
   constructor({
-    options={},
+    options = {},
     message,
     statusCode = StatusCode.CREATED,
     resonStatusCode = ResonStatusCode.CREATED,
     metadata = {},
   }) {
-    super({ message, statusCode, resonStatusCode, metadata});
-    this.options = options
+    super({ message, statusCode, resonStatusCode, metadata });
+    this.options = options;
   }
 }
 module.exports = {
   OK,
   CREATED,
+  SucessResponse,
 };
