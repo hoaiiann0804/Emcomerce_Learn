@@ -4,6 +4,11 @@ const crypto = require("crypto");
 const KeyTokenService = require("./keyToken.service");
 const { createTokenPair } = require("../auth/AuthUntils");
 const { getInfoData } = require("../utils");
+const {
+  BadRequestError,
+  ConflictRequestError,
+} = require("../core/error.response");
+const { findByEmail } = require("./shop.service");
 
 const RolesShop = {
   SHOP: "SHOP",
@@ -18,10 +23,7 @@ class AccessService {
       const existShop = await shopModels.findOne({ email }).lean();
       // lean : trả về 1 opject JS thuần túy (query nhanh)
       if (existShop) {
-        return {
-          code: "xxxx",
-          message: "Shop Already Registered",
-        };
+        throw new ConflictRequestError("Error: Shop already registered !");
       }
       const passwordHash = await bcrypt.hash(password, 10);
       const newShop = await shopModels.create({
@@ -47,15 +49,15 @@ class AccessService {
         // });
         const privateKey = crypto.randomBytes(64).toString("hex");
         const publicKey = crypto.randomBytes(64).toString("hex");
-        
+
         //Public key CryptogGraphy standard
 
-      //level nang cao 
-      // const pubilcKeyString = await KeyTokenService.createToken({
-      //   userId: newShop._id,
-      //   publicKey,
-    
-      // });
+        //level nang cao
+        // const pubilcKeyString = await KeyTokenService.createToken({
+        //   userId: newShop._id,
+        //   publicKey,
+
+        // });
         console.log({ privateKey, publicKey }); //save collection KeyStore
         const keyStore = await KeyTokenService.createToken({
           userId: newShop._id,
@@ -64,7 +66,7 @@ class AccessService {
         });
         if (!keyStore) {
           return {
-            code: "xxxx",
+            code: 400,
             message: "Public key string error",
           };
         }
@@ -96,12 +98,20 @@ class AccessService {
         metadata: null,
       };
     } catch (error) {
-      return {
-        code: "xxxx",
-        message: error.message,
-        status: "error",
-      };
+      throw error;
     }
+  };
+
+  static SignIn = async ({ email, password, refreshToken = null }) => {
+    //check ermail
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) throw new BadRequestError("Email or password is incorrect");
+    //check password
+    const match = bcrypt.compare(password, foundShop.password)
+    if(!match) throw new  
+    // create accesstoken va refresh token
+    //genenalToken
+    //getData return login
   };
 }
 module.exports = AccessService;
