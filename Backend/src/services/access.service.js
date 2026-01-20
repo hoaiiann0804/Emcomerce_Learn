@@ -7,6 +7,7 @@ const { getInfoData } = require("../utils");
 const {
   BadRequestError,
   ConflictRequestError,
+  AuthFailureError,
 } = require("../core/error.response");
 const { findByEmail } = require("./shop.service");
 
@@ -58,7 +59,7 @@ class AccessService {
         //   publicKey,
 
         // });
-        console.log({ privateKey, publicKey }); //save collection KeyStore
+        // console.log({ privateKey, publicKey }); //save collection KeyStore
         const keyStore = await KeyTokenService.createToken({
           userId: newShop._id,
           publicKey,
@@ -107,10 +108,31 @@ class AccessService {
     const foundShop = await findByEmail({ email });
     if (!foundShop) throw new BadRequestError("Email or password is incorrect");
     //check password
-    const match = bcrypt.compare(password, foundShop.password)
-    if(!match) throw new  
-    // create accesstoken va refresh token
+    const match = bcrypt.compare(password, foundShop.password);
+    if (!match) throw new AuthFailureError("Authentication error");
+    // create accesstoken v a refresh token
+    const privateKey = crypto.randomBytes(64).toString("hex");
+    const publicKey = crypto.randomBytes(64).toString("hex");
     //genenalToken
+    const tokens = await createTokenPair(
+      { userId: foundShop._id, email },
+      publicKey,
+      privateKey
+    );
+    await KeyTokenService.createToken({
+      refreshToken: tokens.refreshToken,
+      privateKey,
+      publicKey,
+    });
+
+    return {
+      shop: getInfoData({
+        fileds: ["_id", "name", "email"],
+        object: foundShop,
+      }),
+      tokens,
+    };
+
     //getData return login
   };
 }
