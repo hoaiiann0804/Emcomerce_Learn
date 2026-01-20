@@ -28,5 +28,22 @@ require("../src/dbs/init.mongodb");
 // const { checkOverLoad } = require("../src/helpers/check.connect");
 // checkOverLoad();
 app.use("/", require("./routes"));
+//handle error
 
+//ham quan ly middleware chi co 3 tham so
+app.use((req, res, next) => {
+  const error = new Error("Not Found");
+  error.status = 404;
+  next(error);
+});
+//ham quan ly loi 4 tham so
+app.use((error, req, res, next) => {
+  const statusCode = error.status || 500;
+  return res.status(statusCode).json({
+    status: "error",
+    code: statusCode,
+    message: error.message || 'Internal Server Error' 
+  });
+});
+ 
 module.exports = app;
